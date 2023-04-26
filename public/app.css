@@ -76,11 +76,12 @@ input[type="file"]{
 }
 
 .alert {
-    color: darkred;
+   
+    color: #db0000;
 }
 .msg-error {
     display: block;
-    color: darkred;
+    color: #db0000;
     font-size: 0.9rem;
 }
 .flex-horizontal {
