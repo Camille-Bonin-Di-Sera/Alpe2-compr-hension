@@ -108,9 +108,6 @@ fs.writeFile('fichier.txt', 'Contenu du fichier', (err) => {
 ```
 <br>
 
-Le module path fournit des fonctions pour manipuler des chemins de fichiers et de répertoires. Voici quelques exemples d'utilisation :
-<br>
-
 
 
 
