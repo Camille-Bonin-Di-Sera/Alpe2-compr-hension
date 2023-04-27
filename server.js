@@ -13,105 +13,81 @@
   })
   ///////////////////////////////////////////////////////////////
 
-
-
+//évite que ,nath ou autre hack le pc
+app.use((req, res, next) => {
+  if(req.ip !== "::1"){
+  res.status(666).json({message: "Fuck your fucking mum "})
+  }
+    next()
+})
 
 
 
   //////////////////////Route Api GET DIRECTORY//////////////////////////
-
-// La fonction listerRepertoireSync prend en paramètre un chemin de répertoire et retourne une liste 
-//d'objets représentant les fichiers et les dossiers contenus dans ce répertoire.
+  
+// La fonction listerRepertoireSync synchroniquement liste tous les fichiers et dossiers dans le répertoire spécifié et retourne un tableau de résultats.
 function listerRepertoireSync(repertoire) {
 
-  // Utilise la méthode readdirSync de l'objet fs pour récupérer la liste des fichiers et des dossiers dans le répertoire spécifié.
+  // Récupération de la liste de fichiers et de dossiers dans le répertoire.
   let fichiers = fs.readdirSync(repertoire);
 
-  // Initialise un tableau vide qui va contenir les informations sur chaque élément (fichier ou dossier) du répertoire.
+  // Initialisation d'un tableau vide qui va stocker les résultats.
   let resultat = [];
 
-  // Parcourt la liste des fichiers et des dossiers retournée par readdirSync.
+  // Parcours de chaque fichier/dossier pour créer un objet pour chaque élément.
   fichiers.forEach(function(fichier) {
-      // Utilise la méthode statSync de l'objet fs pour récupérer des informations sur l'élément en cours (taille, date de création, etc.).
+      
+      // Récupération des informations sur le fichier/dossier (taille, date de création, etc.).
       let stat = fs.statSync(repertoire + '/' + fichier);
 
-      // Crée un objet représentant l'élément en cours et le stocke dans le tableau resultat.
+      // Création d'un objet avec le nom du fichier/dossier et l'indication s'il s'agit d'un dossier ou non.
       let element = {
           name: fichier,
           isFolder: stat.isDirectory()
       };
 
-      // Si l'élément en cours est un fichier (et non un dossier), ajoute sa taille à l'objet element.
+      // Si l'élément est un fichier (et non un dossier), ajoute sa taille à l'objet.
       if (!element.isFolder) {
           element.size = stat.size;
       }
 
-      // Ajoute l'objet element au tableau resultat.
+      // Ajoute l'objet à la liste de résultats.
       resultat.push(element);
   });
 
-  // Retourne le tableau resultat qui contient les informations sur chaque élément du répertoire.
+  // Retourne le tableau de résultats.
   return resultat;
 }
 
- /**
-  * La fonction répertorie les fichiers et dossiers d'un répertoire donné et renvoie un tableau
-  * d'objets contenant leurs noms, leurs tailles (pour les fichiers) et s'il s'agit de dossiers ou non.
-  * @param repertoire - Le paramètre "repertoire" est une chaîne représentant le chemin du répertoire
-  * dont on veut lister le contenu.
-  * @returns un tableau d'objets qui représentent les fichiers et les dossiers dans le répertoire
-  * spécifié. Chaque objet a une propriété "name" qui contient le nom du fichier ou du dossier, une
-  * propriété "isFolder" qui indique si l'élément est un dossier ou non, et si l'élément n'est pas un
-  * dossier, une propriété "size" qui contient la taille du fichier en octets.
-  */
-
-
- 
-
-
-
-
-
-
-  // Définit une route pour l'API avec l'objet app de Express.js. Cette route peut accepter un paramètre nommé "name".
+// La fonction app.get écoute les requêtes HTTP GET sur le chemin /api/drive/:name?
 app.get('/api/drive/:name?', function(req, res) {
-  // Vérifie si le paramètre "name" est défini dans l'URL de la requête.
+
+  // Si un nom est spécifié dans la requête, liste le répertoire avec ce nom.
   if (req.params.name) {
-      // Si oui, récupère sa valeur et construit le chemin complet du dossier à afficher.
+      
+      // Récupère le nom du répertoire depuis la requête.
       let name = req.params.name;
+
+      // Crée le chemin complet du répertoire en ajoutant son nom à la variable dir.
       let path = dir + '/' + name;
 
-      // Vérifie si le dossier existe.
+      // Si le répertoire existe, retourne la liste de ses fichiers et dossiers.
       if (fs.existsSync(path)) {
-          // Si oui, retourne la liste des fichiers et dossiers qu'il contient en utilisant la fonction listerRepertoireSync définie ailleurs dans le code.
           res.status(200).json(listerRepertoireSync(path));
       } else {
-          // Si non, retourne une erreur 404 avec un message d'erreur approprié.
+
+          // Si le répertoire n'existe pas, retourne une erreur 404.
           res.status(404).json({ error: 'Le dossier demandé n\'existe pas' });
       }
+
   } else {
-      // Si le paramètre "name" n'est pas défini, retourne la liste des fichiers et dossiers à la racine du dossier racine (défini par la variable dir).
+      
+      // Si aucun nom n'est spécifié dans la requête, liste le répertoire par défaut.
       res.status(200).json(listerRepertoireSync(dir));
   }
 });
 
 
-
-
-
-
-/* Ce code définit une route pour une requête GET vers le '/api/drive/:name?' point final. Le nom?' une
-partie du point de terminaison est un paramètre facultatif. Si le paramètre est présent dans la
-requête, le code vérifie si un répertoire portant ce nom existe dans le répertoire temporaire
-(défini précédemment dans le code). Si c'est le cas, le code renvoie une réponse JSON avec le
-contenu du répertoire à l'aide de la fonction listerRepertoireSync. Si le répertoire n'existe pas,
-le code renvoie une erreur 404. Si le paramètre n'est pas présent dans la requête, le code renvoie
-une réponse JSON avec le contenu du répertoire temporaire à l'aide de la fonction
-listerRepertoireSync. */
-
-
-
-  //////////////////////////////////////////////////////////////
 
 
 
@@ -124,6 +100,9 @@ listerRepertoireSync. */
 
 
   //////////////////////Route Api POST CREATE//////////////////////////
+
+
+
   app.post('/api/drive', function(req, res) {
     let name = req.query.name;
     if (name.match(/^[a-z0-9]+$/i)) {
